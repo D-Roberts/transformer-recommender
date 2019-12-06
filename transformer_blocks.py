@@ -1,6 +1,6 @@
 """
-Recode scaled dot product attention and pointwise feedforward networks with leaky relu activation per Alibaba rec.
-
+Recode scaled dot product attention and pointwise feedforward networks with leaky relu activation.
+Modify NMT Transformer gluonnlp code.
 """
 
 import math
@@ -170,7 +170,7 @@ class DotProductAttentionCell(AttentionCell):
 
         if self._activation is not None:
             with self.name_scope():
-                self.act = gluon.nn.LeakyReLU(0.1)
+                self.act = gluon.nn.LeakyReLU(alpha=0.1)
 
         if units is not None:
             with self.name_scope():
@@ -411,7 +411,7 @@ class BasePositionwiseFFN(HybridBlock):
 
             # per alibaba rec article leakyRELU is used in self-attention and ffn
             if act.lower() == 'leakyrelu':
-                return gluon.nn.LeakyReLU(0.1)
+                return gluon.nn.LeakyReLU(alpha=0.1)
             else:
                 return gluon.nn.Activation(act)
         assert isinstance(act, gluon.Block)

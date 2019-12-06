@@ -1,5 +1,6 @@
 """
-Alibaba transformer based recommender.
+BST transformer based recommender.
+Not all hyperparameter values were disclosed. Toy values used instead.
 
 """
 import mxnet as mx
@@ -15,6 +16,10 @@ from transformer_blocks import _get_attention_cell, PositionwiseFFN
 
 _SEQ_LEN = 32
 _OTHER_LEN = 32
+_EMB_DIM = 32
+_NUM_HEADS = 8
+_DROP = 0.2
+_UNITS = 32
 
 def _position_encoding_init(max_length, dim):
     """Init the sinusoid position encoding table """
@@ -33,45 +38,39 @@ class Rec(HybridBlock):
         with self.name_scope():
 
             self.otherfeatures = nn.Embedding(input_dim=_OTHER_LEN,
-                                              output_dim=32)
+                                               output_dim=_EMB_DIM)
             self.features = HybridSequential()
-
             self.features.add(nn.Embedding(input_dim=_SEQ_LEN,
-                                           output_dim=32)) # what dim?
+                                           output_dim=_EMB_DIM))
 
             # Transformer
-
             # Multi-head attention with base cell scaled dot-product attention
             # Use b=1 self-attention blocks per article recommendation
-
             self.cell = _get_attention_cell('multi_head',
-                                                      units=16,
-                                                      scaled=True,
-                                                      dropout=0.5,
-                                                      num_heads=4,
-                                                      use_bias=False,
-                                            activation='relu')
-
-            self.proj = nn.Dense(units=32,
+                                            units=_UNITS,
+                                            scaled=True,
+                                            dropout=_DROP,
+                                            num_heads=_NUM_HEADS,
+                                            use_bias=False)
+            self.proj = nn.Dense(units=_UNITS,
                                  use_bias=False,
                                  bias_initializer='zeros',
                                  weight_initializer=None,
                                  flatten=False
                                  )
-            self.drop_out_layer = nn.Dropout(rate=0.5)
-            self.ffn = PositionwiseFFN(hidden_size=32,
-                                        use_residual=True,
-                                                             dropout=0.5,
-                                                             units=32,
-                                                             weight_initializer=None,
-                                                             bias_initializer='zeros',
-                                       activation='leakyrelu',
-                                       ffn1_dropout=0.0
+            self.drop_out_layer = nn.Dropout(rate=_DROP)
+            self.ffn = PositionwiseFFN(hidden_size=_UNITS,
+                                       use_residual=True,
+                                       dropout=_DROP,
+                                       units=_UNITS,
+                                       weight_initializer=None,
+                                       bias_initializer='zeros',
+                                       activation='leakyrelu'
                                        )
+            self.layer_norm = nn.LayerNorm(in_channels=_UNITS)
 
-            self.layer_norm = nn.LayerNorm(in_channels=32)
-
-            # final MLP layers; dimensions were 1024, 512, 256
+            # Final MLP layers; BST dimensions were 1024, 512, 256
+            # LeakyReLU alpha value not disclosed in the article
             self.output = HybridSequential()
             self.output.add(nn.Dense(8))
             self.output.add(LeakyReLU(alpha=0.1))
@@ -96,15 +95,9 @@ class Rec(HybridBlock):
         return arange
 
 
-        # TODO: stack self attention blocks
-
-            # TODO: clean up, replace hard_coded arguments and push online
-
             # TODO: change position encoding like in alibaba paper; likely the entire POsitionFFN class must be changed.
-            # And check that the positional embedding gets added at the right spot for the input
 
-            # TODO: c add other options (such as valid seq length and masking etc)
-
+            # TODO: cleanup make repo public
 
 
     def _get_positional(self, weight_type, max_length, units):
