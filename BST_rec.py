@@ -25,9 +25,23 @@ def _position_encoding_init(max_length, dim):
     """Init the sinusoid position encoding table """
     position_enc = np.arange(max_length).reshape((-1, 1)) \
                    / (np.power(10000, (2. / dim) * np.arange(dim).reshape((1, -1))))
-    # print(position_enc)
+    print(position_enc)
     position_enc[:, 0::2] = np.sin(position_enc[:, 0::2])  # dim 2i
     position_enc[:, 1::2] = np.cos(position_enc[:, 1::2])
+
+    return position_enc
+
+
+def _position_encoding_init_BST(max_length, dim):
+    """For the BST recommender, the positional embedding takes the time of item being clicked as
+    input feature and calculates the position value of item vi as p(vt) - p(vi) where
+    p(vt) is recommending time and p(vi) is time the user clicked on item vi
+
+    """
+    # Assume position_enc is the p(vt) - p(vi) fed as input
+    position_enc = np.arange(max_length).reshape((-1, 1)) \
+                   / (np.power(10000, (2. / dim) * np.arange(dim).reshape((1, -1))))
+
 
     return position_enc
 
@@ -94,17 +108,17 @@ class Rec(HybridBlock):
             # print(arange)
         return arange
 
-
-            # TODO: change position encoding like in alibaba paper; likely the entire POsitionFFN class must be changed.
-
             # TODO: cleanup make repo public
 
 
     def _get_positional(self, weight_type, max_length, units):
         if weight_type == 'sinusoidal':
             encoding = _position_encoding_init(max_length, units)
-
-        # will have the alibaba weight_type as well
+        elif weight_type == 'BST':
+            # BST position fed as input
+            encoding = _position_encoding_init_BST(max_length, units)
+        else:
+            raise ValueError('Not known')
 
         return mx.nd.array(encoding)
 
@@ -119,12 +133,10 @@ class Rec(HybridBlock):
 
         steps = self._arange_like(F, x, axis=1)
         x = self.features(x)
-        position_weight = self._get_positional('sinusoidal', 32, 32)
+        position_weight = self._get_positional('BST', _SEQ_LEN, _UNITS)
 
         # add positional embedding
-        positional_embedding = F.Embedding(steps, position_weight, 32, 32)
-        #print(positional_embedding.shape)
-        #print(x.shape)
+        positional_embedding = F.Embedding(steps, position_weight, _SEQ_LEN, _UNITS)
         x = F.broadcast_add(x, F.expand_dims(positional_embedding, axis=0))
 
         # attention cell with dropout
