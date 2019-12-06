@@ -7,12 +7,10 @@ import mxnet as mx
 import numpy as np
 from mxnet.gluon import nn
 from mxnet.gluon.nn import HybridBlock, HybridSequential, LeakyReLU
-from mxnet import gluon
-import gluonnlp as nlp
 
 # from gluonnlp.model.seq2seq_encoder_decoder import _get_attention_cell
 # from gluonnlp.model.transformer import PositionwiseFFN
-from transformer_blocks import _get_attention_cell, PositionwiseFFN
+from bst_alibaba_rec.transformer_blocks import _get_attention_cell, PositionwiseFFN
 
 _SEQ_LEN = 32
 _OTHER_LEN = 32

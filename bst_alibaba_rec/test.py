@@ -4,7 +4,7 @@ Bare bones test for alibaba rec.
 """
 
 import mxnet as mx
-import BST_rec
+from bst_alibaba_rec import BST_rec
 
 _SEQ_LEN = 32
 _BATCH = 1

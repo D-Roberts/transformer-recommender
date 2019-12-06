@@ -4,13 +4,12 @@ BST recommender.
 """
 
 import mxnet as mx
-from mxnet import gluon, nd
+from mxnet import gluon
 import numpy as np
-import gluonnlp as nlp
 import random
 from mxnet import autograd as ag
 
-import BST_rec
+from bst_alibaba_rec import BST_rec
 
 np.random.seed(100)
 ctx = mx.cpu()
