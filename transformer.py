@@ -36,8 +36,8 @@ def generate_sample():
 def train():
     train_data = generate_sample()
     optimizer = mx.optimizer.Adam()
-    # loss is here for Binary outcome
-    # paper says sigmoid
+
+    # Binary classification problem; predict if user clicks target item
     loss = gluon.loss.SigmoidBinaryCrossEntropyLoss()
 
     net = model.Rec()
