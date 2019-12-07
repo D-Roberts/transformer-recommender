@@ -1,9 +1,9 @@
 """
-Recode scaled dot product attention and pointwise feedforward networks with leaky relu activation.
-Modify NMT Transformer gluonnlp code.
+Scaled dot product attention and pointwise feedforward networks with leaky relu activation.
+Refactor NMT Transformer gluonnlp code.
+
 """
 
-import math
 import numpy as np
 import mxnet as mx
 from mxnet import gluon
@@ -46,7 +46,6 @@ def _masked_softmax(F, att_score, mask, dtype):
     else:
         att_weights = F.softmax(att_score, axis=-1)
     return att_weights
-
 
 def _get_attention_cell(attention_cell, units=None,
                         scaled=True, num_heads=None,

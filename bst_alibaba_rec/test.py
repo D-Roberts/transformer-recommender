@@ -1,5 +1,5 @@
 """
-Bare bones test for alibaba rec.
+Bare bones test for alibaba rec codes.
 
 """
 
