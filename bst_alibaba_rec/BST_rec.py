@@ -1,6 +1,6 @@
 """
 Barebones BST transformer based recommender.
-Not all hyperparameter values were disclosed. Toy values used instead.
+Not all hyperparameter values were disclosed in the published article. Toy values used instead.
 
 """
 
@@ -38,6 +38,7 @@ def _position_encoding_init_BST(max_length, dim):
     return position_enc
 
 class Rec(HybridBlock):
+    """Alibaba transformer based recommender"""
     def __init__(self, **kwargs):
         super(Rec, self).__init__(**kwargs)
         with self.name_scope():
@@ -104,7 +105,6 @@ class Rec(HybridBlock):
         else:
             raise ValueError('Not known')
         return mx.nd.array(encoding)
-
 
     def hybrid_forward(self, F, x, x_other, mask=None):
         # The manually engineered features
