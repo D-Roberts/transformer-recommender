@@ -1,16 +1,15 @@
 """
-BST transformer based recommender.
+Barebones BST transformer based recommender.
 Not all hyperparameter values were disclosed. Toy values used instead.
 
 """
+
 import mxnet as mx
 import numpy as np
 from mxnet.gluon import nn
 from mxnet.gluon.nn import HybridBlock, HybridSequential, LeakyReLU
 
-# from gluonnlp.model.seq2seq_encoder_decoder import _get_attention_cell
-# from gluonnlp.model.transformer import PositionwiseFFN
-from bst_alibaba_rec.transformer_blocks import _get_attention_cell, PositionwiseFFN
+from transformer_blocks import _get_attention_cell, PositionwiseFFN
 
 _SEQ_LEN = 32
 _OTHER_LEN = 32
@@ -23,12 +22,9 @@ def _position_encoding_init(max_length, dim):
     """Init the sinusoid position encoding table """
     position_enc = np.arange(max_length).reshape((-1, 1)) \
                    / (np.power(10000, (2. / dim) * np.arange(dim).reshape((1, -1))))
-    print(position_enc)
-    position_enc[:, 0::2] = np.sin(position_enc[:, 0::2])  # dim 2i
+    position_enc[:, 0::2] = np.sin(position_enc[:, 0::2])
     position_enc[:, 1::2] = np.cos(position_enc[:, 1::2])
-
     return position_enc
-
 
 def _position_encoding_init_BST(max_length, dim):
     """For the BST recommender, the positional embedding takes the time of item being clicked as
@@ -39,22 +35,17 @@ def _position_encoding_init_BST(max_length, dim):
     # Assume position_enc is the p(vt) - p(vi) fed as input
     position_enc = np.arange(max_length).reshape((-1, 1)) \
                    / (np.power(10000, (2. / dim) * np.arange(dim).reshape((1, -1))))
-
-
     return position_enc
-
 
 class Rec(HybridBlock):
     def __init__(self, **kwargs):
         super(Rec, self).__init__(**kwargs)
         with self.name_scope():
-
             self.otherfeatures = nn.Embedding(input_dim=_OTHER_LEN,
                                                output_dim=_EMB_DIM)
             self.features = HybridSequential()
             self.features.add(nn.Embedding(input_dim=_SEQ_LEN,
                                            output_dim=_EMB_DIM))
-
             # Transformer
             # Multi-head attention with base cell scaled dot-product attention
             # Use b=1 self-attention blocks per article recommendation
@@ -80,9 +71,7 @@ class Rec(HybridBlock):
                                        activation='leakyrelu'
                                        )
             self.layer_norm = nn.LayerNorm(in_channels=_UNITS)
-
-            # Final MLP layers; BST dimensions were 1024, 512, 256
-            # LeakyReLU alpha value not disclosed in the article
+            # Final MLP layers; BST dimensions in the article were 1024, 512, 256
             self.output = HybridSequential()
             self.output.add(nn.Dense(8))
             self.output.add(LeakyReLU(alpha=0.1))
@@ -106,9 +95,6 @@ class Rec(HybridBlock):
             # print(arange)
         return arange
 
-            # TODO: cleanup make repo public
-
-
     def _get_positional(self, weight_type, max_length, units):
         if weight_type == 'sinusoidal':
             encoding = _position_encoding_init(max_length, units)
@@ -117,52 +103,35 @@ class Rec(HybridBlock):
             encoding = _position_encoding_init_BST(max_length, units)
         else:
             raise ValueError('Not known')
-
         return mx.nd.array(encoding)
 
 
     def hybrid_forward(self, F, x, x_other, mask=None):
-
-
-        # The manual features
+        # The manually engineered features
         x1 = self.otherfeatures(x_other)
 
-        # The transformer features
-
+        # The transformer
         steps = self._arange_like(F, x, axis=1)
         x = self.features(x)
         position_weight = self._get_positional('BST', _SEQ_LEN, _UNITS)
-
         # add positional embedding
         positional_embedding = F.Embedding(steps, position_weight, _SEQ_LEN, _UNITS)
         x = F.broadcast_add(x, F.expand_dims(positional_embedding, axis=0))
-
         # attention cell with dropout
         out_x, attn_w = self.cell(x, x, x, mask)
-
         out_x = self.proj(out_x)
-
         out_x = self.drop_out_layer(out_x)
-
         # add and norm
-
         out_x = x + out_x
         out_x = self.layer_norm(out_x)
-
         # ffn
         out_x = self.ffn(out_x)
-
-        # concat other features with transformer representations
-        # print(out_x.shape)
-        # print(x1.shape)
+        # concat engineered features with transformer representations
         out_x = mx.ndarray.concat(out_x, x1)
 
-
-        # Leakyrelu final layers
+        # leakyrelu final layers
         out_x = self.output(out_x)
-
         return out_x
-
 
 # Constructor
 def ali_rec(**kwargs):
