@@ -330,8 +330,8 @@ class MultiHeadAttentionCell(AttentionCell):
 
 
 def _get_layer_norm(use_bert, units, layer_norm_eps=None):
-    from gluonnlp.model.bert import BERTLayerNorm
-    layer_norm = BERTLayerNorm if use_bert else nn.LayerNorm
+    # from gluonnlp.model.bert import BERTLayerNorm
+    layer_norm = nn.LayerNorm
     if layer_norm_eps:
         return layer_norm(in_channels=units, epsilon=layer_norm_eps)
     else:

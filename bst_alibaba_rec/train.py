@@ -49,9 +49,8 @@ def train():
         for x, y in train_data:
             with ag.record():
                 # assume x contains sequential inputs and manually engineered features
-                output = net(x[:,:32], x[:, 32:])
+                output = net(x[:, :32], x[:, 32:])
                 l = loss(output, y).sum()
-                print(l)
         l.backward()
         trainer.step(_BATCH)
         train_metric.update(y, output)

@@ -44,10 +44,9 @@ class Rec(HybridBlock):
         with self.name_scope():
             self.otherfeatures = nn.Embedding(input_dim=_OTHER_LEN,
                                                output_dim=_EMB_DIM)
-            self.features = HybridSequential()
-            self.features.add(nn.Embedding(input_dim=_SEQ_LEN,
-                                           output_dim=_EMB_DIM))
-            # Transformer
+            self.features = nn.Embedding(input_dim=_SEQ_LEN,
+                                           output_dim=_EMB_DIM)
+            # Transformer layers
             # Multi-head attention with base cell scaled dot-product attention
             # Use b=1 self-attention blocks per article recommendation
             self.cell = _get_attention_cell('multi_head',
@@ -110,7 +109,7 @@ class Rec(HybridBlock):
         # The manually engineered features
         x1 = self.otherfeatures(x_other)
 
-        # The transformer
+        # The transformer encoder
         steps = self._arange_like(F, x, axis=1)
         x = self.features(x)
         position_weight = self._get_positional('BST', _SEQ_LEN, _UNITS)
@@ -126,14 +125,10 @@ class Rec(HybridBlock):
         out_x = self.layer_norm(out_x)
         # ffn
         out_x = self.ffn(out_x)
+
         # concat engineered features with transformer representations
         out_x = mx.ndarray.concat(out_x, x1)
-
         # leakyrelu final layers
         out_x = self.output(out_x)
         return out_x
-
-# Constructor
-def ali_rec(**kwargs):
-    net = Rec(**kwargs)
-    return net
+        
