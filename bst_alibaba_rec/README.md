@@ -2,7 +2,7 @@
 
 https://arxiv.org/abs/1905.06874
 
-### To test code:
+### To test code (Python 3.8):
 
 ```
 python test.py
