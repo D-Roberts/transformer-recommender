@@ -1,7 +1,7 @@
 """
 Barebones BST transformer based recommender.
 Not all hyperparameter values were disclosed in the published article. Toy values used instead.
-
+Best on Python3.8.
 """
 
 import mxnet as mx
@@ -131,4 +131,3 @@ class Rec(HybridBlock):
         # leakyrelu final layers
         out_x = self.output(out_x)
         return out_x
-        
