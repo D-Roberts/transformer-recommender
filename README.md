@@ -1,2 +1,2 @@
-### Neural network based recommendation systems.
+### Example neural network based recommendation systems.
 
