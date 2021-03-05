@@ -1,4 +1,4 @@
-### Gluon implementation of recommendation system in the article "Behavior Sequence Transformer for E-commerce Recommendation in Alibaba". 
+### Gluon implementation (from scratch) of recommendation system from the article "Behavior Sequence Transformer for E-commerce Recommendation in Alibaba". 
 
 https://arxiv.org/abs/1905.06874
 
